@@ -3,6 +3,15 @@ name: Terraform Apply
 
 on:
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        type: choice
+        options:
+          - test
+          - production
+        default: test
 
 permissions:
   contents: read
@@ -12,6 +21,7 @@ jobs:
   terraform-apply:
     name: Terraform Apply
     runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
 
     defaults:
       run:
@@ -66,6 +76,11 @@ jobs:
       - name: Terraform Init
         run: terraform init
 
+      - name: Select Terraform Workspace
+        run: |
+          terraform workspace select "${{ inputs.environment }}" || \
+          terraform workspace new "${{ inputs.environment }}"
+
       - name: Terraform Plan
         env:
           TF_VAR_admin_ip: ${{ secrets.TF_VAR_admin_ip }}
@@ -81,5 +96,7 @@ jobs:
           cache-dependency-path: tests/go.sum
 
       - name: Run Terratest
+        env:
+          TF_WORKSPACE: ${{ inputs.environment }}
         run: go test -v ./...
         working-directory: tests

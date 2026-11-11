@@ -25,6 +25,6 @@ resource "aws_instance" "db" {
   }
 
   tags = {
-    Name = each.key
+    Name = "${terraform.workspace}-${each.key}"
   }
 }

@@ -3,6 +3,10 @@
 # Routing table configuration
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.terraform.id
+
+  tags = {
+    Name = "${terraform.workspace}-public"
+  }
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.gw.id
@@ -20,7 +24,7 @@ resource "aws_route_table" "private" {
   vpc_id = aws_vpc.terraform.id
 
   tags = {
-    Name = "private-db"
+    Name = "${terraform.workspace}-private-db"
   }
 }
 

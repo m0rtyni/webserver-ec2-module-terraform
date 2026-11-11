@@ -2,11 +2,11 @@
 
 # Default administration port
 resource "aws_security_group" "administration" {
-  name        = "administration"
+  name        = "${terraform.workspace}-administration"
   description = "Allow default administration service"
   vpc_id      = aws_vpc.terraform.id
   tags = {
-    Name = "administration"
+    Name = "${terraform.workspace}-administration"
   }
 
   # Open ssh port
@@ -29,11 +29,11 @@ resource "aws_security_group" "administration" {
 # Open web port
 #trivy:ignore:AVD-AWS-0104:exp:2027-02-07
 resource "aws_security_group" "web" {
-  name        = "web"
+  name        = "${terraform.workspace}-web"
   description = "Allow web incgress trafic"
   vpc_id      = aws_vpc.terraform.id
   tags = {
-    Name = "web"
+    Name = "${terraform.workspace}-web"
   }
 
   # http port
@@ -72,11 +72,11 @@ resource "aws_security_group" "web" {
 # Open database port
 #trivy:ignore:AVD-AWS-0104:exp:2027-02-07
 resource "aws_security_group" "db" {
-  name        = "db"
+  name        = "${terraform.workspace}-db"
   description = "Allow db incgress trafic"
   vpc_id      = aws_vpc.terraform.id
   tags = {
-    Name = "db"
+    Name = "${terraform.workspace}-db"
   }
 
   # db port
