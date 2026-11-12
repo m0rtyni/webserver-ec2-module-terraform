@@ -1,61 +1,67 @@
-## How to
+## How to Create and Manage Environments
 
-![infra instance with multiple network](./img/03-multiple-network.png "infra instance with multiple network")
-
-### Create stack
-
-```bash
-terraform apply
-```
-
-This script will create:
+The infrastructure consists of:
 - 1 VPC
-- 2 networks
-- 2 HTTP instances
-- 3 DB instances
+- 2 networks (public and private subnets)
+- 2 HTTP EC2 instances
+- 3 DB EC2 instances
 
-### Delete stack
-
-```bash
-terraform destroy
-```
+The project supports two isolated environments: `test` and `production`. Each environment uses a separate Terraform Workspace and remote state file stored in an Amazon S3 bucket.
 
 ### GitHub Actions Pipeline
 
-The repository uses GitHub Actions to automate Terraform validation, security checks, planning, and deployment.
+GitHub Actions automates Terraform validation, security checks, planning, and deployment.
 
-**Workflows:**
+The repository uses three workflows:
 
 - **Terraform CI** – runs `terraform fmt`, `terraform init`, and `terraform validate` on pushes and pull requests.
-- **Terraform Pipeline** – runs Terraform validation, TFLint, and Trivy security scans before generating and uploading a Terraform Plan artifact.
-- **Terraform Apply** – manually triggered workflow that creates or updates the infrastructure and runs Terratest after a successful apply.
+- **Terraform Pipeline** – runs TFLint and Trivy security scans, then generates and uploads a Terraform Plan artifact. Supports selecting `test` or `production`.
+- **Terraform Apply** – manually triggered workflow that deploys the selected environment and runs Terratest.
 
-**Security and Code Quality**
+### Creating an Environment
 
-- **TFLint** checks Terraform code for best-practice issues.
-- **Trivy** scans Terraform configuration for security misconfigurations.
-- Terraform Plan runs only if TFLint and Trivy succeed.
+To create or update an environment using GitHub Actions:
 
-**Terratest**
+1. Push changes to the `main` branch to trigger Terraform CI and Terraform Pipeline, or manually run the Terraform Pipeline and select the required environment.
+2. Review the Terraform Plan result and download the generated plan artifact if needed.
+3. Open GitHub Actions and manually run the **Terraform Apply** workflow.
+4. Select the target environment (`test` or `production`).
+5. The workflow initializes Terraform, selects or creates the corresponding Workspace, applies the configuration, and runs Terratest.
 
-After Terraform Apply, Terratest verifies:
-- Expected HTTP and DB EC2 instance counts and running state.
-- VPC and subnet CIDR ranges.
-- DB instances have no public IP addresses.
-- DB Security Group does not allow public MySQL access.
+Each environment is managed independently and has its own Terraform state.
 
-**AWS Authentication**
+### Local Environment Management
 
-GitHub Actions authenticates to AWS using OpenID Connect (OIDC) and an IAM role. No long-lived AWS access keys are stored in GitHub.
+To manage environments locally, navigate to the repository root and initialize Terraform:
 
-**Terraform Remote State**
+```bash
+terraform -chdir=infrastructure init
+```
 
-Terraform state is stored in an Amazon S3 bucket in the `eu-north-1` region. State locking is enabled using S3 lockfiles.
+Select an existing Workspace or create it if it does not exist:
 
-**How to use the pipeline:**
+```bash
+terraform -chdir=infrastructure workspace select test || terraform -chdir=infrastructure workspace new test
+```
 
-1. Push changes to the `main` branch to trigger Terraform CI and Terraform Pipeline.
-2. Check the Terraform Pipeline result and review the generated plan artifact.
-3. Open GitHub Actions and manually run the **Terraform Apply** workflow when deployment is required.
+Replace `test` with `production` to work with the production environment.
 
-Local Terraform commands can also be used from the `infrastructure` directory after running `terraform init`.
+Plan and apply the configuration:
+
+```bash
+terraform -chdir=infrastructure plan
+terraform -chdir=infrastructure apply
+```
+
+To remove the selected environment:
+
+```bash
+terraform -chdir=infrastructure destroy
+```
+
+### AWS Authentication and Remote State
+
+- GitHub Actions authenticates to AWS using OpenID Connect (OIDC) and an IAM role. No long-lived AWS access keys are stored in GitHub.
+- Terraform state is stored remotely in an Amazon S3 bucket in the `eu-north-1` region.
+- State locking is enabled using S3 lockfiles.
+- Terraform Workspaces keep the `test` and `production` state files isolated.
