@@ -65,3 +65,29 @@ terraform -chdir=infrastructure destroy
 - Terraform state is stored remotely in an Amazon S3 bucket in the `eu-north-1` region.
 - State locking is enabled using S3 lockfiles.
 - Terraform Workspaces keep the `test` and `production` state files isolated.
+
+### Self-Hosted Runner
+
+The project uses a self-hosted GitHub Actions runner hosted on an AWS EC2 instance (Ubuntu 24.04).
+
+To configure a runner:
+
+1. Open **Settings → Actions → Runners** in the GitHub repository.
+2. Select **New self-hosted runner** and choose Linux and the appropriate architecture.
+3. Follow GitHub's instructions to download, configure, and register the runner.
+4. Install and start it as a service:
+
+```bash
+sudo ./svc.sh install
+sudo ./svc.sh start
+```
+
+The runner requires Git, Terraform, Docker, and outbound HTTPS connectivity. AWS access is provided through an EC2 IAM instance profile and GitHub OIDC where required.
+
+### Troubleshooting
+
+- **Runner offline:** Check the EC2 instance and runner service status (`sudo ./svc.sh status`).
+- **Docker errors:** Verify Docker is installed and the runner user has permission to access it.
+- **AWS authentication errors:** Check the IAM role, OIDC trust policy, and permissions.
+- **Terraform errors:** Verify the Terraform version and initialization.
+- **Terratest failures:** Check available memory and runner logs (`journalctl`).
