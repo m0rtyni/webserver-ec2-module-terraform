@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - features/multi-environment
     paths:
       - 'infrastructure/**'
       - '.github/workflows/**'
@@ -21,7 +22,7 @@ permissions:
 jobs:
   terraform-check:
     name: Terraform Format and Validate
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     defaults:
       run:
