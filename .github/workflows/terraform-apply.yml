@@ -20,7 +20,7 @@ permissions:
 jobs:
   terraform-apply:
     name: Terraform Apply
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     environment: ${{ inputs.environment }}
 
     defaults:
@@ -35,6 +35,7 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.17.1
+          terraform_wrapper: false
 
       - name: Terraform Format Check
         run: terraform fmt -check -recursive
